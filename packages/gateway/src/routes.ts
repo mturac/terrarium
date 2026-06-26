@@ -23,13 +23,16 @@ export interface StripeTransferResponse {
 }
 
 export function mapStripeTransferToInject(body: StripeTransferRequest): Record<string, unknown> {
-  return {
+  const args: Record<string, unknown> = {
     from: body.source,
     to: body.destination,
     amount: body.amount,
     currency: (body.currency ?? 'usd').toUpperCase(),
-    idempotency_key: body.idempotency_key ?? `http-${body.source}-${body.destination}-${body.amount}`,
   };
+  if (body.idempotency_key) {
+    args.idempotency_key = body.idempotency_key;
+  }
+  return args;
 }
 
 export function handleTransferCreate(

@@ -3,6 +3,7 @@ import { EventLog } from './event-log.js';
 import { canonicalJson, sha256 } from './hash.js';
 import type { ExportedWorld, RunningWorld, ScenarioSpec, Vertical, WorldMeta } from './types.js';
 import { loadPersistedWorld } from './engine.js';
+import { fallbackScenarioSpec } from './scenario.js';
 
 export function loadRunningWorld(cwd: string, vertical: Vertical): RunningWorld {
   const persisted = loadPersistedWorld(cwd);
@@ -16,13 +17,7 @@ export function loadRunningWorld(cwd: string, vertical: Vertical): RunningWorld 
   eventLog.load(persisted.events);
 
   const meta = { ...persisted.meta };
-  const scenario_spec = persisted.scenario_spec ?? {
-    vertical: meta.vertical,
-    seed: meta.seed,
-    population: 50,
-    webhook_sink: '.terrarium/webhooks.jsonl',
-    schedule: [],
-  };
+  const scenario_spec = persisted.scenario_spec ?? fallbackScenarioSpec(meta.vertical, meta.seed);
 
   return {
     meta,

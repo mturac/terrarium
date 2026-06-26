@@ -48,3 +48,12 @@ export function defaultFintechBaseline(): ScenarioSpec {
     schedule: [],
   };
 }
+
+/** Single fallback when persisted world lacks scenario_spec (session + inject paths). */
+export function fallbackScenarioSpec(vertical: string, seed: number): ScenarioSpec {
+  return {
+    ...defaultFintechBaseline(),
+    vertical,
+    seed,
+  };
+}

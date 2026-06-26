@@ -48,7 +48,7 @@ describe('HTTP gateway', () => {
         currency: 'usd',
         source: 'acct_0001',
         destination: 'acct_0002',
-        idempotency_key: 'http-parity-1',
+
       }),
     });
 

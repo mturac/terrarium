@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fallbackScenarioSpec } from './scenario.js';
 import { DeterministicClock } from './clock.js';
 import { EventLog } from './event-log.js';
 import { canonicalJson, sha256 } from './hash.js';
@@ -160,15 +161,7 @@ function persistWorld(cwd: string, state: ExportedWorld): void {
 }
 
 function defaultScenarioFromMeta(world: RunningWorld): ScenarioSpec {
-  return {
-    vertical: world.meta.vertical,
-    seed: world.meta.seed,
-    population: 50,
-    initial_balance_cents: 100_000,
-    currency: 'USD',
-    webhook_sink: '.terrarium/webhooks.jsonl',
-    schedule: [],
-  };
+  return fallbackScenarioSpec(world.meta.vertical, world.meta.seed);
 }
 
 export function loadPersistedWorld(cwd: string): ExportedWorld | null {
