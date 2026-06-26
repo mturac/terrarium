@@ -35,6 +35,15 @@ export function mapStripeTransferToInject(body: StripeTransferRequest): Record<s
   return args;
 }
 
+type PersistedTransfer = {
+  id: string;
+  from_account_id: string;
+  to_account_id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+};
+
 export function handleTransferCreate(
   world: RunningWorld,
   body: StripeTransferRequest,
@@ -46,20 +55,33 @@ export function handleTransferCreate(
   const persisted = loadPersistedWorld(cwd);
   if (!persisted) throw new Error('World not persisted after inject');
 
-  const state = persisted.vertical_state as {
-    transfers: { id: string; status: string }[];
-  };
+  const state = persisted.vertical_state as { transfers: PersistedTransfer[] };
   const transfer = state.transfers.at(-1);
   if (!transfer) throw new Error('Transfer not created');
 
+  return transferToResponse(transfer, persisted.meta.state_hash);
+}
+
+export function handleTransferRetrieve(cwd: string, transferId: string): StripeTransferResponse {
+  const persisted = loadPersistedWorld(cwd);
+  if (!persisted) throw new Error('No running world');
+
+  const state = persisted.vertical_state as { transfers: PersistedTransfer[] };
+  const transfer = state.transfers.find((t) => t.id === transferId);
+  if (!transfer) throw new Error(`Transfer not found: ${transferId}`);
+
+  return transferToResponse(transfer, persisted.meta.state_hash);
+}
+
+function transferToResponse(transfer: PersistedTransfer, stateHash: string): StripeTransferResponse {
   return {
     id: transfer.id,
     object: 'transfer',
-    amount: body.amount,
-    currency: (body.currency ?? 'usd').toLowerCase(),
-    source: body.source,
-    destination: body.destination,
+    amount: transfer.amount_cents,
+    currency: transfer.currency.toLowerCase(),
+    source: transfer.from_account_id,
+    destination: transfer.to_account_id,
     status: transfer.status,
-    state_hash: persisted.meta.state_hash,
+    state_hash: stateHash,
   };
 }

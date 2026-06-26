@@ -107,6 +107,40 @@ describe('HTTP gateway', () => {
     const transfers = (after.vertical_state as { transfers: { id: string }[] }).transfers;
     expect(transfers.filter((t) => t.id === a.id)).toHaveLength(1);
   });
+
+  it('GET /v1/transfers/:id retrieves created transfer without mutating state', async () => {
+    gateway = await createGateway({ cwd, port: 0 });
+    const create = await fetch(`${gateway.url}/v1/transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: 25000,
+        currency: 'usd',
+        source: 'acct_0001',
+        destination: 'acct_0002',
+      }),
+    });
+    const created = (await create.json()) as { id: string; state_hash: string };
+    const hashAfterCreate = loadPersistedWorld(cwd)!.meta.state_hash;
+
+    const get = await fetch(`${gateway.url}/v1/transfers/${created.id}`);
+    expect(get.status).toBe(200);
+    const retrieved = (await get.json()) as { id: string; state_hash: string; amount: number };
+    expect(retrieved.id).toBe(created.id);
+    expect(retrieved.amount).toBe(25000);
+    expect(retrieved.state_hash).toBe(hashAfterCreate);
+
+    expect(loadPersistedWorld(cwd)!.meta.state_hash).toBe(hashAfterCreate);
+  });
+
+  it('GET /v1/openapi.yaml serves gateway spec', async () => {
+    gateway = await createGateway({ cwd, port: 0 });
+    const res = await fetch(`${gateway.url}/v1/openapi.yaml`);
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain('openapi: 3.1.0');
+    expect(text).toContain('/v1/transfers/{id}');
+  });
 });
 
 function countWebhookLines(cwd: string): number {

@@ -1,11 +1,17 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { loadPersistedWorld, loadRunningWorld } from '@terrarium/core';
 import { createFintechVertical } from '@terrarium/vertical-fintech';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   handleTransferCreate,
+  handleTransferRetrieve,
   type StripeTransferRequest,
   type StripeTransferResponse,
 } from './routes.js';
+
+const OPENAPI_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../docs/gateway-openapi.yaml');
 
 export interface GatewayOptions {
   cwd: string;
@@ -77,6 +83,36 @@ async function route(req: IncomingMessage, res: ServerResponse, cwd: string): Pr
       events: world.events.length,
       state_hash: world.meta.state_hash,
     });
+    return;
+  }
+
+  if (method === 'GET' && path === '/v1/openapi.yaml') {
+    try {
+      const spec = readFileSync(OPENAPI_PATH, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/yaml' });
+      res.end(spec);
+    } catch {
+      sendJson(res, 404, { error: 'OpenAPI spec not found' });
+    }
+    return;
+  }
+
+  const transferGet = path.match(/^\/v1\/transfers\/([^/]+)$/);
+  if (method === 'GET' && transferGet) {
+    const world = loadPersistedWorld(cwd);
+    if (!world) {
+      sendJson(res, 404, { error: 'No running world. Run terrarium up fintech first.' });
+      return;
+    }
+    try {
+      const transferId = transferGet[1] ?? '';
+      const response = handleTransferRetrieve(cwd, decodeURIComponent(transferId));
+      sendJson(res, 200, response);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const status = message.startsWith('Transfer not found') ? 404 : 500;
+      sendJson(res, status, { error: message });
+    }
     return;
   }
 

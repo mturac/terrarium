@@ -164,9 +164,11 @@ async function cmdServe(args: string[]): Promise<void> {
 
   const gw = await createGateway({ cwd: process.cwd(), port });
   console.log(`terrarium: gateway listening on ${gw.url}`);
-  console.log('  POST /v1/transfers  — Stripe-like transfer create');
-  console.log('  GET  /v1/status     — world state_hash');
-  console.log('  GET  /v1/health     — liveness');
+  console.log('  POST /v1/transfers       — Stripe-like transfer create');
+  console.log('  GET  /v1/transfers/:id   — retrieve transfer');
+  console.log('  GET  /v1/status          — world state_hash');
+  console.log('  GET  /v1/health          — liveness');
+  console.log('  GET  /v1/openapi.yaml    — gateway OpenAPI spec');
 
   await new Promise<void>((resolve) => {
     const shutdown = () => {

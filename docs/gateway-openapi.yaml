@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Terrarium Gateway
+  version: 0.1.1
+  description: Stripe-shaped HTTP surface over the Terrarium deterministic fintech world.
+servers:
+  - url: http://127.0.0.1:8787
+paths:
+  /v1/health:
+    get:
+      summary: Liveness probe
+      responses:
+        '200':
+          description: Gateway is running
+  /v1/status:
+    get:
+      summary: World status including state_hash
+      responses:
+        '200':
+          description: Persisted world metadata
+  /v1/transfers:
+    post:
+      summary: Create transfer (same rules as terrarium inject transfer)
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferCreate'
+      responses:
+        '201':
+          description: Transfer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+  /v1/transfers/{id}:
+    get:
+      summary: Retrieve transfer by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transfer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '404':
+          description: Transfer or world not found
+  /v1/openapi.yaml:
+    get:
+      summary: This OpenAPI document
+      responses:
+        '200':
+          description: YAML spec
+components:
+  schemas:
+    TransferCreate:
+      type: object
+      required: [amount, source, destination]
+      properties:
+        amount:
+          type: integer
+        currency:
+          type: string
+          default: usd
+        source:
+          type: string
+        destination:
+          type: string
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [transfer]
+        amount:
+          type: integer
+        currency:
+          type: string
+        source:
+          type: string
+        destination:
+          type: string
+        status:
+          type: string
+        state_hash:
+          type: string
