@@ -1,0 +1,14 @@
+apiVersion: terrarium.dev/v1
+kind: Scenario
+metadata:
+  name: fintech/baseline
+  version: "0.1.0"
+  description: Fifty funded accounts, no scheduled injections — manual testing baseline.
+spec:
+  vertical: fintech
+  seed: 42
+  population: 50
+  initial_balance_cents: 100000
+  currency: USD
+  webhook_sink: .terrarium/webhooks.jsonl
+  schedule: []

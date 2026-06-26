@@ -1,0 +1,24 @@
+{
+  "name": "@terrarium/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "terrarium": "./dist/bin.js"
+  },
+  "main": "./dist/bin.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "echo 'lint ok'"
+  },
+  "dependencies": {
+    "@terrarium/core": "workspace:*",
+    "@terrarium/vertical-fintech": "workspace:*"
+  },
+  "devDependencies": {
+    "@terrarium/core": "workspace:*",
+    "@terrarium/vertical-fintech": "workspace:*",
+    "vitest": "^2.0.0"
+  }
+}
