@@ -89,15 +89,28 @@ async function route(req: IncomingMessage, res: ServerResponse, cwd: string): Pr
 
     const body = (await readJson(req)) as StripeTransferRequest;
     validateTransferBody(body);
+    const request = withIdempotencyHeader(req, body);
 
     const vertical = createFintechVertical();
     const running = loadRunningWorld(cwd, vertical);
-    const response: StripeTransferResponse = handleTransferCreate(running, body, cwd);
+    const response: StripeTransferResponse = handleTransferCreate(running, request, cwd);
     sendJson(res, 201, response);
     return;
   }
 
   sendJson(res, 404, { error: `Not found: ${method} ${path}` });
+}
+
+/** Stripe sends idempotency via header; body field remains supported for tests. */
+function withIdempotencyHeader(
+  req: IncomingMessage,
+  body: StripeTransferRequest,
+): StripeTransferRequest {
+  const header = req.headers['idempotency-key'];
+  if (typeof header === 'string' && header.length > 0) {
+    return { ...body, idempotency_key: header };
+  }
+  return body;
 }
 
 function validateTransferBody(body: StripeTransferRequest): void {

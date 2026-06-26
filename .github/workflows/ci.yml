@@ -23,3 +23,5 @@ jobs:
       - run: pnpm build
       - name: Determinism gate (3-run baseline)
         run: node scripts/determinism-gate.mjs
+      - name: HTTP gateway parity (curl + CLI inject hash)
+        run: node scripts/http-verify.mjs

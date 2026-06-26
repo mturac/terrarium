@@ -72,6 +72,41 @@ describe('HTTP gateway', () => {
     const status = (await statusRes.json()) as { state_hash: string };
     expect(status.state_hash).toBe(after.meta.state_hash);
   });
+
+  it('honors Stripe Idempotency-Key header on transfer create', async () => {
+    gateway = await createGateway({ cwd, port: 0 });
+    const payload = {
+      amount: 5000,
+      currency: 'usd',
+      source: 'acct_0001',
+      destination: 'acct_0002',
+    };
+    const headers = {
+      'Content-Type': 'application/json',
+      'Idempotency-Key': 'stripe-header-dup',
+    };
+
+    const first = await fetch(`${gateway.url}/v1/transfers`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const second = await fetch(`${gateway.url}/v1/transfers`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    const a = (await first.json()) as { id: string };
+    const b = (await second.json()) as { id: string };
+    expect(b.id).toBe(a.id);
+
+    const after = loadPersistedWorld(cwd)!;
+    const transfers = (after.vertical_state as { transfers: { id: string }[] }).transfers;
+    expect(transfers.filter((t) => t.id === a.id)).toHaveLength(1);
+  });
 });
 
 function countWebhookLines(cwd: string): number {
