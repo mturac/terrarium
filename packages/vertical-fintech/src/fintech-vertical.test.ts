@@ -19,6 +19,7 @@ function makeCtx(seed: number): VerticalContext {
     seed,
     scenario,
     clock,
+    cwd: process.cwd(),
     emit: (type, payload) => {
       const envelope = {
         seq: events.length,

@@ -25,6 +25,7 @@ export interface UpOptions {
 
 export function up(options: UpOptions): RunningWorld {
   const cwd = options.cwd ?? process.cwd();
+  const worldCwd = cwd;
   const run_id = randomUUID();
   const clock = new DeterministicClock(options.scenario.seed);
   const eventLog = new EventLog();
@@ -33,12 +34,13 @@ export function up(options: UpOptions): RunningWorld {
     seed: options.scenario.seed,
     scenario: options.scenario,
     clock,
+    cwd: worldCwd,
     emit: (type, payload) => eventLog.append(type, clock.now(), payload),
   };
 
   options.vertical.bootstrap(ctx);
 
-  const state = buildExportState(options.vertical, clock, eventLog, {
+  const state = buildExportState(options.vertical, clock, eventLog, options.scenario, {
     run_id,
     vertical: options.vertical.name,
     seed: options.scenario.seed,
@@ -56,15 +58,16 @@ export function up(options: UpOptions): RunningWorld {
     vertical: options.vertical,
     clock,
     eventLog,
-    exportState: () => buildExportState(options.vertical, clock, eventLog, state.meta),
+    exportState: () =>
+      buildExportState(options.vertical, clock, eventLog, options.scenario, state.meta),
   };
 }
 
-export function advance(world: RunningWorld, duration: string): WorldMeta {
+export function advance(world: RunningWorld, duration: string, cwd?: string): WorldMeta {
   world.clock.advance(duration);
   const state = world.exportState();
   state.meta.state_hash = computeStateHash(state);
-  persistWorld(process.cwd(), state);
+  persistWorld(cwd ?? process.cwd(), state);
   return state.meta;
 }
 
@@ -72,17 +75,22 @@ export function inject(
   world: RunningWorld,
   action: string,
   args: Record<string, unknown>,
+  cwd?: string,
 ): EventEnvelope[] {
+  const worldCwd = cwd ?? process.cwd();
+  const persisted = loadPersistedWorld(worldCwd);
+  const scenario = persisted?.scenario_spec ?? defaultScenarioFromMeta(world);
   const ctx: VerticalContext = {
     seed: world.meta.seed,
-    scenario: defaultScenarioFromMeta(world),
+    scenario,
     clock: world.clock,
+    cwd: worldCwd,
     emit: (type, payload) => world.eventLog.append(type, world.clock.now(), payload),
   };
   const envelopes = world.vertical.inject(action, args, ctx);
   const state = world.exportState();
   state.meta.state_hash = computeStateHash(state);
-  persistWorld(process.cwd(), state);
+  persistWorld(worldCwd, state);
   return envelopes;
 }
 
@@ -106,7 +114,8 @@ export function replayFromExport(
     vertical,
     clock,
     eventLog,
-    exportState: () => buildExportState(vertical, clock, eventLog, exported.meta),
+    exportState: () =>
+      buildExportState(vertical, clock, eventLog, exported.scenario_spec, exported.meta),
   };
 
   const rebuilt = world.exportState();
@@ -119,13 +128,15 @@ function buildExportState(
   vertical: Vertical,
   clock: DeterministicClock,
   eventLog: EventLog,
+  scenario_spec: ScenarioSpec,
   meta: WorldMeta,
 ): ExportedWorld {
-  const snapshot = {
+  const snapshot: ExportedWorld = {
     meta: { ...meta, state_hash: '' },
     clock_tick: clock.getTick(),
     events: eventLog.export(),
     vertical_state: vertical.getState(),
+    scenario_spec,
   };
   snapshot.meta.state_hash = computeStateHash(snapshot);
   return snapshot;
@@ -153,6 +164,9 @@ function defaultScenarioFromMeta(world: RunningWorld): ScenarioSpec {
     vertical: world.meta.vertical,
     seed: world.meta.seed,
     population: 50,
+    initial_balance_cents: 100_000,
+    currency: 'USD',
+    webhook_sink: '.terrarium/webhooks.jsonl',
     schedule: [],
   };
 }

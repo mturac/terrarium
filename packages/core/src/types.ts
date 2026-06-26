@@ -41,6 +41,7 @@ export interface VerticalContext {
   seed: number;
   scenario: ScenarioSpec;
   clock: import('./clock.js').DeterministicClock;
+  cwd: string;
   emit: (type: string, payload: Record<string, unknown>) => EventEnvelope;
 }
 
@@ -57,6 +58,7 @@ export interface ExportedWorld {
   clock_tick: number;
   events: EventEnvelope[];
   vertical_state: Record<string, unknown>;
+  scenario_spec: ScenarioSpec;
 }
 
 export interface RunningWorld {

@@ -21,3 +21,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Determinism gate (3-run baseline)
+        run: node scripts/determinism-gate.mjs

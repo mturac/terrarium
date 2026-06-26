@@ -29,6 +29,9 @@ importers:
       '@terrarium/core':
         specifier: workspace:*
         version: link:../core
+      '@terrarium/gateway':
+        specifier: workspace:*
+        version: link:../gateway
       '@terrarium/vertical-fintech':
         specifier: workspace:*
         version: link:../vertical-fintech
@@ -45,6 +48,19 @@ importers:
       zod:
         specifier: ^3.23.0
         version: 3.25.76
+    devDependencies:
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.43)
+
+  packages/gateway:
+    dependencies:
+      '@terrarium/core':
+        specifier: workspace:*
+        version: link:../core
+      '@terrarium/vertical-fintech':
+        specifier: workspace:*
+        version: link:../vertical-fintech
     devDependencies:
       vitest:
         specifier: ^2.0.0

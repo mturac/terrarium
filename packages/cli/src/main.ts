@@ -1,18 +1,16 @@
 import { rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
-  DeterministicClock,
-  EventLog,
   advance,
-  canonicalJson,
   inject,
   loadPersistedWorld,
+  loadRunningWorld,
   loadScenarioFromFile,
   replayFromExport,
-  sha256,
   up,
   type RunningWorld,
 } from '@terrarium/core';
+import { createGateway } from '@terrarium/gateway';
 import { createFintechVertical } from '@terrarium/vertical-fintech';
 
 export async function main(argv: string[]): Promise<void> {
@@ -37,6 +35,9 @@ export async function main(argv: string[]): Promise<void> {
       return;
     case 'down':
       cmdDown();
+      return;
+    case 'serve':
+      await cmdServe(args.slice(1));
       return;
     case undefined:
     case 'help':
@@ -100,7 +101,7 @@ function cmdStatus(): void {
 
 function cmdAdvance(duration: string | undefined): void {
   if (!duration) throw new Error('Usage: terrarium advance <duration>  e.g. 1h, 30m');
-  const world = loadRunningWorld();
+  const world = loadWorld();
   const meta = advance(world, duration);
   console.log('terrarium: advanced');
   console.log(`  clock:     tick ${world.clock.getTick()}`);
@@ -112,7 +113,7 @@ function cmdInject(args: string[]): void {
   if (!action) throw new Error('Usage: terrarium inject <action> [--key value ...]');
 
   const injectArgs = parseFlags(args.slice(1));
-  const world = loadRunningWorld();
+  const world = loadWorld();
   const envelopes = inject(world, action, injectArgs);
   const updated = loadPersistedWorld(process.cwd());
   console.log(`terrarium: injected ${action} (${envelopes.length} event(s))`);
@@ -143,47 +144,37 @@ function cmdDown(): void {
   console.log('terrarium: world down');
 }
 
-function loadRunningWorld(): RunningWorld {
+function loadWorld(): RunningWorld {
   const persisted = loadPersistedWorld(process.cwd());
   if (!persisted) throw new Error('No running world');
-
-  const vertical = resolveVertical(persisted.meta.vertical);
-  vertical.restoreState(persisted.vertical_state);
-
-  const clock = new DeterministicClock(persisted.meta.seed);
-  clock.restore(persisted.clock_tick);
-  const eventLog = new EventLog();
-  eventLog.load(persisted.events);
-
-  return {
-    meta: { ...persisted.meta },
-    vertical,
-    clock,
-    eventLog,
-    exportState: () => rebuildExport(vertical, clock, eventLog, persisted.meta),
-  };
+  return loadRunningWorld(process.cwd(), resolveVertical(persisted.meta.vertical));
 }
 
-function rebuildExport(
-  vertical: RunningWorld['vertical'],
-  clock: DeterministicClock,
-  eventLog: EventLog,
-  meta: RunningWorld['meta'],
-) {
-  const snapshot = {
-    meta: { ...meta, state_hash: '' },
-    clock_tick: clock.getTick(),
-    events: eventLog.export(),
-    vertical_state: vertical.getState(),
-  };
-  const body = {
-    clock_tick: snapshot.clock_tick,
-    vertical_state: snapshot.vertical_state,
-    event_count: snapshot.events.length,
-    last_event_hash: snapshot.events.at(-1)?.hash ?? null,
-  };
-  snapshot.meta.state_hash = sha256(canonicalJson(body));
-  return snapshot;
+async function cmdServe(args: string[]): Promise<void> {
+  let port = 8787;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--port' && args[i + 1]) {
+      port = Number(args[++i]);
+    }
+  }
+
+  if (!loadPersistedWorld(process.cwd())) {
+    throw new Error('No running world. Run: terrarium up fintech');
+  }
+
+  const gw = await createGateway({ cwd: process.cwd(), port });
+  console.log(`terrarium: gateway listening on ${gw.url}`);
+  console.log('  POST /v1/transfers  — Stripe-like transfer create');
+  console.log('  GET  /v1/status     — world state_hash');
+  console.log('  GET  /v1/health     — liveness');
+
+  await new Promise<void>((resolve) => {
+    const shutdown = () => {
+      gw.close().then(resolve).catch(resolve);
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  });
 }
 
 function resolveVertical(name: string) {
@@ -227,6 +218,7 @@ Usage:
   terrarium advance <duration>
   terrarium inject <action> [--from id] [--to id] [--amount cents]
   terrarium replay [run-id]
+  terrarium serve [--port 8787]
   terrarium down
 `);
 }

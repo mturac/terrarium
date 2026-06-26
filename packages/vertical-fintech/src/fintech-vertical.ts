@@ -6,9 +6,9 @@ import { generateAccounts, generateUsers } from './generator.js';
 import type { Account, FintechState, Transfer, WebhookDelivery } from './types.js';
 
 const KYC_LIMITS_CENTS: Record<number, number> = {
-  0: 10_000,
-  1: 50_000,
-  2: 250_000,
+  0: 1_000_000,
+  1: 5_000_000,
+  2: 25_000_000,
   3: Number.MAX_SAFE_INTEGER,
 };
 
@@ -251,7 +251,7 @@ export class FintechVertical implements Vertical {
 
     const sink = ctx.scenario.webhook_sink;
     if (sink) {
-      const path = join(process.cwd(), sink);
+      const path = join(ctx.cwd, sink);
       mkdirSync(dirname(path), { recursive: true });
       appendFileSync(path, `${JSON.stringify(delivery)}\n`);
     }

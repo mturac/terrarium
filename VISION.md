@@ -47,6 +47,18 @@ terrarium down
 
 Every command must work offline. No cloud dependency for core loop.
 
+## HTTP gateway (v0.1.1)
+
+```bash
+terrarium up fintech --seed 42
+terrarium serve --port 8787
+curl -X POST http://127.0.0.1:8787/v1/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{"amount":25000,"currency":"usd","source":"acct_0001","destination":"acct_0002"}'
+```
+
+Stripe-shaped transfer create hits the same `inject('transfer')` path as the CLI. Responses include `state_hash` for audit/replay workflows.
+
 ## Vertical: Fintech (first ship)
 
 See [docs/verticals/fintech.md](./docs/verticals/fintech.md).
