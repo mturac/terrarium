@@ -11,57 +11,57 @@ Provide a production-shaped financial substrate without connecting to real money
 
 ### Account
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `id` | `acct_*` | Stable from seed + index |
-| `owner_id` | `user_*` | Links to synthetic user |
-| `currency` | ISO 4217 | USD default in baseline |
-| `balance_cents` | int | Never negative after commit |
-| `hold_cents` | int | Pending outbound |
-| `kyc_tier` | 0–3 | Affects transfer limits |
-| `status` | `active` \| `frozen` \| `closed` | |
+| Field           | Type                             | Notes                       |
+| --------------- | -------------------------------- | --------------------------- |
+| `id`            | `acct_*`                         | Stable from seed + index    |
+| `owner_id`      | `user_*`                         | Links to synthetic user     |
+| `currency`      | ISO 4217                         | USD default in baseline     |
+| `balance_cents` | int                              | Never negative after commit |
+| `hold_cents`    | int                              | Pending outbound            |
+| `kyc_tier`      | 0–3                              | Affects transfer limits     |
+| `status`        | `active` \| `frozen` \| `closed` |                             |
 
 ### Transfer
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `id` | `txn_*` | |
-| `idempotency_key` | string | Duplicate key returns same txn |
-| `from_account_id` | string | |
-| `to_account_id` | string | |
-| `amount_cents` | int | > 0 |
-| `currency` | string | Must match both accounts |
-| `status` | `pending` \| `settled` \| `failed` | |
-| `created_at` | virtual timestamp | From deterministic clock |
-| `settled_at` | virtual timestamp \| null | Set on settlement batch |
+| Field             | Type                               | Notes                          |
+| ----------------- | ---------------------------------- | ------------------------------ |
+| `id`              | `txn_*`                            |                                |
+| `idempotency_key` | string                             | Duplicate key returns same txn |
+| `from_account_id` | string                             |                                |
+| `to_account_id`   | string                             |                                |
+| `amount_cents`    | int                                | > 0                            |
+| `currency`        | string                             | Must match both accounts       |
+| `status`          | `pending` \| `settled` \| `failed` |                                |
+| `created_at`      | virtual timestamp                  | From deterministic clock       |
+| `settled_at`      | virtual timestamp \| null          | Set on settlement batch        |
 
 ### Synthetic user
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `id` | `user_*` | |
-| `display_name` | string | Generated from seed |
-| `email` | string | `{id}@terrarium.local` |
-| `risk_score` | 0.0–1.0 | Drives compliance flags |
+| Field          | Type     | Notes                   |
+| -------------- | -------- | ----------------------- |
+| `id`           | `user_*` |                         |
+| `display_name` | string   | Generated from seed     |
+| `email`        | string   | `{id}@terrarium.local`  |
+| `risk_score`   | 0.0–1.0  | Drives compliance flags |
 
 ### Webhook delivery
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `id` | `wh_*` | |
-| `event_type` | string | See event catalog |
-| `payload` | object | Canonical JSON |
-| `signature` | HMAC-SHA256 | Secret from world config |
-| `delivered_at` | virtual timestamp | |
+| Field          | Type              | Notes                    |
+| -------------- | ----------------- | ------------------------ |
+| `id`           | `wh_*`            |                          |
+| `event_type`   | string            | See event catalog        |
+| `payload`      | object            | Canonical JSON           |
+| `signature`    | HMAC-SHA256       | Secret from world config |
+| `delivered_at` | virtual timestamp |                          |
 
 ## Event catalog (v0.1)
 
-| Event | Trigger | Webhook |
-|-------|---------|---------|
-| `account.created` | World bootstrap / bulk open | yes |
-| `transfer.created` | Inject or API | yes |
-| `transfer.settled` | Settlement batch or instant | yes |
-| `compliance.flag` | risk_score > threshold on transfer | yes |
+| Event              | Trigger                            | Webhook |
+| ------------------ | ---------------------------------- | ------- |
+| `account.created`  | World bootstrap / bulk open        | yes     |
+| `transfer.created` | Inject or API                      | yes     |
+| `transfer.settled` | Settlement batch or instant        | yes     |
+| `compliance.flag`  | risk_score > threshold on transfer | yes     |
 
 ## Rules engine
 

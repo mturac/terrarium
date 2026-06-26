@@ -1,7 +1,25 @@
 import type { Account, SyntheticUser } from './types.js';
 
-const FIRST_NAMES = ['Ada', 'Grace', 'Alan', 'Katherine', 'Dennis', 'Barbara', 'Donald', 'Margaret'];
-const LAST_NAMES = ['Lovelace', 'Hopper', 'Turing', 'Johnson', 'Ritchie', 'Liskov', 'Knuth', 'Hamilton'];
+const FIRST_NAMES = [
+  'Ada',
+  'Grace',
+  'Alan',
+  'Katherine',
+  'Dennis',
+  'Barbara',
+  'Donald',
+  'Margaret',
+];
+const LAST_NAMES = [
+  'Lovelace',
+  'Hopper',
+  'Turing',
+  'Johnson',
+  'Ritchie',
+  'Liskov',
+  'Knuth',
+  'Hamilton',
+];
 
 export function generateUsers(seed: number, count: number): SyntheticUser[] {
   const users: SyntheticUser[] = [];

@@ -93,7 +93,9 @@ export class FintechVertical implements Vertical {
     const to = String(args.to ?? args.to_account_id ?? '');
     const amount = Number(args.amount ?? args.amount_cents ?? 0);
     const currency = String(args.currency ?? 'USD');
-    const idempotencyKey = String(args.idempotency_key ?? args['idempotency-key'] ?? `auto-${from}-${to}-${amount}`);
+    const idempotencyKey = String(
+      args.idempotency_key ?? args['idempotency-key'] ?? `auto-${from}-${to}-${amount}`,
+    );
 
     const existingId = this.state.idempotency_index[idempotencyKey];
     if (existingId) {
@@ -189,9 +191,7 @@ export class FintechVertical implements Vertical {
         status: 'active',
       };
       this.state.accounts.push(account);
-      envelopes.push(
-        ctx.emit('account.created', { account_id: account.id, owner_id: user.id }),
-      );
+      envelopes.push(ctx.emit('account.created', { account_id: account.id, owner_id: user.id }));
       this.deliverWebhook(ctx, 'account.created', { account_id: account.id });
     }
     return envelopes;

@@ -48,18 +48,26 @@ describe('FintechVertical', () => {
     const v = createFintechVertical();
     const ctx = makeCtx(42);
     v.bootstrap(ctx);
-    v.inject('transfer', {
-      from: 'acct_0001',
-      to: 'acct_0002',
-      amount: 1000,
-      idempotency_key: 'dup',
-    }, ctx);
-    v.inject('transfer', {
-      from: 'acct_0001',
-      to: 'acct_0002',
-      amount: 1000,
-      idempotency_key: 'dup',
-    }, ctx);
+    v.inject(
+      'transfer',
+      {
+        from: 'acct_0001',
+        to: 'acct_0002',
+        amount: 1000,
+        idempotency_key: 'dup',
+      },
+      ctx,
+    );
+    v.inject(
+      'transfer',
+      {
+        from: 'acct_0001',
+        to: 'acct_0002',
+        amount: 1000,
+        idempotency_key: 'dup',
+      },
+      ctx,
+    );
     const state = v.getState() as { transfers: unknown[] };
     expect(state.transfers).toHaveLength(1);
   });

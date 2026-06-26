@@ -95,7 +95,10 @@ export function handleTransferList(cwd: string): StripeTransferListResponse {
   };
 }
 
-function transferToResponse(transfer: PersistedTransfer, stateHash: string): StripeTransferResponse {
+function transferToResponse(
+  transfer: PersistedTransfer,
+  stateHash: string,
+): StripeTransferResponse {
   return {
     id: transfer.id,
     object: 'transfer',

@@ -122,6 +122,8 @@ describe('terrarium serve', () => {
     const after = loadPersistedWorld(cwd)!;
     expect(after.meta.state_hash).toBe(body.state_hash);
     expect(after.meta.state_hash).not.toBe(before.meta.state_hash);
-    expect(readFileSync(join(cwd, '.terrarium', 'webhooks.jsonl'), 'utf8').trim().length).toBeGreaterThan(0);
+    expect(
+      readFileSync(join(cwd, '.terrarium', 'webhooks.jsonl'), 'utf8').trim().length,
+    ).toBeGreaterThan(0);
   });
 });

@@ -12,7 +12,10 @@ import {
   type StripeTransferResponse,
 } from './routes.js';
 
-const OPENAPI_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../docs/gateway-openapi.yaml');
+const OPENAPI_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../docs/gateway-openapi.yaml',
+);
 
 export interface GatewayOptions {
   cwd: string;

@@ -9,7 +9,9 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "scenario-install-test": "pnpm --filter @terrarium/cli test -- scenario.test.ts",
     "determinism-gate": "node scripts/determinism-gate.mjs",
+    "schedule-verify": "node scripts/schedule-verify.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml}\""
   },

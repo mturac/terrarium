@@ -17,12 +17,12 @@ Terrarium replaces "hope staging works" with **worlds you own**.
 
 ## Category
 
-| Incumbent gap | Terrarium answer |
-|---------------|------------------|
-| WireMock / Prism — static stubs | Stateful worlds with population, ledger, webhooks |
-| LocalStack — AWS-shaped | Domain verticals (fintech, e-commerce, …) with scenario packs |
-| Testcontainers — real DBs | Synthetic users + deterministic clock + event log |
-| Agent sandboxes — ephemeral | Replayable runs exportable to Witness |
+| Incumbent gap                   | Terrarium answer                                              |
+| ------------------------------- | ------------------------------------------------------------- |
+| WireMock / Prism — static stubs | Stateful worlds with population, ledger, webhooks             |
+| LocalStack — AWS-shaped         | Domain verticals (fintech, e-commerce, …) with scenario packs |
+| Testcontainers — real DBs       | Synthetic users + deterministic clock + event log             |
+| Agent sandboxes — ephemeral     | Replayable runs exportable to Witness                         |
 
 ## Core primitives
 
@@ -116,13 +116,13 @@ Terrarium is deliberately standalone. No hard dependency on sibling projects in 
 
 ## Success gates (not MVP theater)
 
-| Gate | Evidence |
-|------|----------|
-| Determinism | Same seed + scenario ⇒ identical final state hash across 3 runs |
-| Replay | `terrarium replay` reproduces state from exported log |
-| Webhooks | At least 3 event types delivered to local sink with signed payloads |
-| Population | 50 synthetic users with stable identities from seed |
-| Community | CONTRIBUTING.md, scenario schema, vertical plugin interface documented |
+| Gate        | Evidence                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| Determinism | Same seed + scenario ⇒ identical final state hash across 3 runs        |
+| Replay      | `terrarium replay` reproduces state from exported log                  |
+| Webhooks    | At least 3 event types delivered to local sink with signed payloads    |
+| Population  | 50 synthetic users with stable identities from seed                    |
+| Community   | CONTRIBUTING.md, scenario schema, vertical plugin interface documented |
 
 ## Build order
 

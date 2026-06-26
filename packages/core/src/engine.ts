@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fallbackScenarioSpec } from './scenario.js';
-import { DeterministicClock } from './clock.js';
+import { DeterministicClock, parseDuration } from './clock.js';
 import { EventLog } from './event-log.js';
 import { canonicalJson, sha256 } from './hash.js';
+import { sortSchedule } from './schedule.js';
 import type {
   EventEnvelope,
   ExportedWorld,
@@ -41,6 +42,10 @@ export function up(options: UpOptions): RunningWorld {
 
   options.vertical.bootstrap(ctx);
 
+  if (options.scenario.schedule.length > 0) {
+    runSchedule(ctx, options.vertical, options.scenario);
+  }
+
   const state = buildExportState(options.vertical, clock, eventLog, options.scenario, {
     run_id,
     vertical: options.vertical.name,
@@ -62,6 +67,43 @@ export function up(options: UpOptions): RunningWorld {
     exportState: () =>
       buildExportState(options.vertical, clock, eventLog, options.scenario, state.meta),
   };
+}
+
+/**
+ * Execute the scenario's `schedule` against the world: for each entry,
+ * advance the clock to its offset, then call `vertical.inject(action, args, ctx)`.
+ * Each scheduled action is wrapped in a fresh `VerticalContext` so `inject`
+ * behaves identically to a manual CLI `terrarium inject` call.
+ */
+export function runSchedule(
+  ctx: VerticalContext,
+  vertical: Vertical,
+  scenario: ScenarioSpec,
+): EventEnvelope[] {
+  const sorted = sortSchedule(scenario.schedule);
+  const emitted: EventEnvelope[] = [];
+  for (const entry of sorted) {
+    const offsetMs = parseDuration(entry.at.startsWith('+') ? entry.at.slice(1) : entry.at);
+    const targetTick = Math.floor(offsetMs / 1000);
+    const currentTick = ctx.clock.getTick();
+    if (targetTick > currentTick) {
+      ctx.clock.advance(`${(targetTick - currentTick) * 1000}ms`);
+    }
+    const stepCtx: VerticalContext = {
+      seed: ctx.seed,
+      scenario: ctx.scenario,
+      clock: ctx.clock,
+      cwd: ctx.cwd,
+      emit: (type, payload) => {
+        const env = ctx.emit(type, payload);
+        emitted.push(env);
+        return env;
+      },
+    };
+    const envs = vertical.inject(entry.inject, entry.args, stepCtx);
+    for (const e of envs) emitted.push(e);
+  }
+  return emitted;
 }
 
 export function advance(world: RunningWorld, duration: string, cwd?: string): WorldMeta {

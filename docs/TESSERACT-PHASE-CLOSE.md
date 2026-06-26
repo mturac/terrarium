@@ -11,6 +11,7 @@
 **Yes (in-plan):** Community integrators need discoverability without knowing transfer ids — add Stripe-shaped list envelope.
 
 **Shipped this phase:**
+
 - `GET /v1/transfers` — list all transfers in running world (read-only, no state mutation)
 - OpenAPI `TransferList` schema + `http-verify.mjs` `LIST_OK` gate
 - Vitest coverage in `server.test.ts`

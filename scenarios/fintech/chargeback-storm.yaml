@@ -1,0 +1,31 @@
+apiVersion: terrarium.dev/v1
+kind: Scenario
+metadata:
+  name: fintech/chargeback-storm
+  version: '0.2.0'
+  description: |
+    Burst of small inbound transfers that flip account holds and
+    produce compliance.flag events for QA agents. Schedule fires
+    immediately at t0 then again at +2h to exercise replay stability.
+spec:
+  vertical: fintech
+  seed: 9001
+  population: 50
+  initial_balance_cents: 100000
+  currency: USD
+  webhook_sink: .terrarium/webhooks.jsonl
+  schedule:
+    - at: '+0s'
+      inject: transfer
+      args:
+        from: acct_0001
+        to: acct_0002
+        amount: 250
+        currency: USD
+    - at: '+2h'
+      inject: transfer
+      args:
+        from: acct_0003
+        to: acct_0004
+        amount: 750
+        currency: USD

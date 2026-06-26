@@ -28,6 +28,20 @@ curl -X POST http://127.0.0.1:8787/v1/transfers \
 - **Deterministic clock** — `terrarium advance 6h` fast-forwards virtual time
 - **Replay verification** — same seed ⇒ same `state_hash`
 
+## Scenario packs
+
+Install community scenarios into a per-project cache, then load them at `up`:
+
+```bash
+pnpm exec terrarium scenario install fintech/chargeback-storm
+pnpm exec terrarium scenario list
+pnpm exec terrarium up fintech --scenario installed:fintech/chargeback-storm
+pnpm exec terrarium scenario remove fintech/chargeback-storm
+```
+
+Each scenario pack declares a `spec.schedule: [{at: "+0s"|"+2h", inject: "...", args: {...}}]`
+which fires deterministically against the world at `up` time.
+
 ## Docs
 
 - [VISION.md](./VISION.md) — category, primitives, roadmap
@@ -35,12 +49,12 @@ curl -X POST http://127.0.0.1:8787/v1/transfers \
 
 ## Packages
 
-| Package | Role |
-|---------|------|
-| `@terrarium/core` | Clock, event log, engine, scenario loader |
-| `@terrarium/vertical-fintech` | Fintech world rules |
-| `@terrarium/cli` | `terrarium` command |
-| `@terrarium/gateway` | Stripe-like HTTP surface |
+| Package                       | Role                                      |
+| ----------------------------- | ----------------------------------------- |
+| `@terrarium/core`             | Clock, event log, engine, scenario loader |
+| `@terrarium/vertical-fintech` | Fintech world rules                       |
+| `@terrarium/cli`              | `terrarium` command                       |
+| `@terrarium/gateway`          | Stripe-like HTTP surface                  |
 
 ## License
 
