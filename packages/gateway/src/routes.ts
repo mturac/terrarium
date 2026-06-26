@@ -22,6 +22,14 @@ export interface StripeTransferResponse {
   state_hash: string;
 }
 
+/** Stripe-shaped list envelope for community integrators. */
+export interface StripeTransferListResponse {
+  object: 'list';
+  data: StripeTransferResponse[];
+  has_more: boolean;
+  url: '/v1/transfers';
+}
+
 export function mapStripeTransferToInject(body: StripeTransferRequest): Record<string, unknown> {
   const args: Record<string, unknown> = {
     from: body.source,
@@ -71,6 +79,20 @@ export function handleTransferRetrieve(cwd: string, transferId: string): StripeT
   if (!transfer) throw new Error(`Transfer not found: ${transferId}`);
 
   return transferToResponse(transfer, persisted.meta.state_hash);
+}
+
+export function handleTransferList(cwd: string): StripeTransferListResponse {
+  const persisted = loadPersistedWorld(cwd);
+  if (!persisted) throw new Error('No running world');
+
+  const state = persisted.vertical_state as { transfers: PersistedTransfer[] };
+  const hash = persisted.meta.state_hash;
+  return {
+    object: 'list',
+    data: state.transfers.map((t) => transferToResponse(t, hash)),
+    has_more: false,
+    url: '/v1/transfers',
+  };
 }
 
 function transferToResponse(transfer: PersistedTransfer, stateHash: string): StripeTransferResponse {

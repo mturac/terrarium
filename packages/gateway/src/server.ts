@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   handleTransferCreate,
+  handleTransferList,
   handleTransferRetrieve,
   type StripeTransferRequest,
   type StripeTransferResponse,
@@ -93,6 +94,20 @@ async function route(req: IncomingMessage, res: ServerResponse, cwd: string): Pr
       res.end(spec);
     } catch {
       sendJson(res, 404, { error: 'OpenAPI spec not found' });
+    }
+    return;
+  }
+
+  if (method === 'GET' && path === '/v1/transfers') {
+    const world = loadPersistedWorld(cwd);
+    if (!world) {
+      sendJson(res, 404, { error: 'No running world. Run terrarium up fintech first.' });
+      return;
+    }
+    try {
+      sendJson(res, 200, handleTransferList(cwd));
+    } catch (err) {
+      sendJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
     }
     return;
   }

@@ -184,6 +184,15 @@ console.log('RETRIEVE_OK', retrieved.id === created.id && retrieved.state_hash =
 const openapiCurl = await runCurl(['-sS', `${baseUrl}/v1/openapi.yaml`]);
 console.log('OPENAPI_OK', openapiCurl.stdout.includes('openapi: 3.1.0'));
 
+const listCurl = await runCurl(['-sS', '-w', '\nHTTP_CODE:%{http_code}\n', `${baseUrl}/v1/transfers`]);
+console.log('=== list curl ===');
+console.log(listCurl.stdout);
+const listed = JSON.parse(listCurl.stdout.split('\nHTTP_CODE')[0]);
+console.log(
+  'LIST_OK',
+  listed.object === 'list' && listed.data.some((t) => t.id === created.id),
+);
+
 const after = JSON.parse(readFileSync(join(cwd, '.terrarium', 'world.json'), 'utf8'));
 const webhookLines = readFileSync(join(cwd, '.terrarium', 'webhooks.jsonl'), 'utf8')
   .trim()

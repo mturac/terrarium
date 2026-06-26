@@ -19,6 +19,17 @@ paths:
         '200':
           description: Persisted world metadata
   /v1/transfers:
+    get:
+      summary: List transfers in the running world (read-only)
+      responses:
+        '200':
+          description: Stripe-shaped list envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferList'
+        '404':
+          description: World not found
     post:
       summary: Create transfer (same rules as terrarium inject transfer)
       parameters:
@@ -77,6 +88,20 @@ components:
         source:
           type: string
         destination:
+          type: string
+    TransferList:
+      type: object
+      properties:
+        object:
+          type: string
+          enum: [list]
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        has_more:
+          type: boolean
+        url:
           type: string
     Transfer:
       type: object

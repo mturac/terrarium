@@ -141,6 +141,37 @@ describe('HTTP gateway', () => {
     expect(text).toContain('openapi: 3.1.0');
     expect(text).toContain('/v1/transfers/{id}');
   });
+
+  it('GET /v1/transfers lists transfers without mutating state', async () => {
+    gateway = await createGateway({ cwd, port: 0 });
+    const hashBefore = loadPersistedWorld(cwd)!.meta.state_hash;
+
+    const create = await fetch(`${gateway.url}/v1/transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: 12000,
+        currency: 'usd',
+        source: 'acct_0001',
+        destination: 'acct_0002',
+      }),
+    });
+    const created = (await create.json()) as { id: string };
+    const hashAfterCreate = loadPersistedWorld(cwd)!.meta.state_hash;
+
+    const list = await fetch(`${gateway.url}/v1/transfers`);
+    expect(list.status).toBe(200);
+    const body = (await list.json()) as {
+      object: string;
+      data: { id: string }[];
+      has_more: boolean;
+    };
+    expect(body.object).toBe('list');
+    expect(body.has_more).toBe(false);
+    expect(body.data.some((t) => t.id === created.id)).toBe(true);
+    expect(loadPersistedWorld(cwd)!.meta.state_hash).toBe(hashAfterCreate);
+    expect(hashAfterCreate).not.toBe(hashBefore);
+  });
 });
 
 function countWebhookLines(cwd: string): number {
